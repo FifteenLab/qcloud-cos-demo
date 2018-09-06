@@ -1,0 +1,22 @@
+server:
+  port: 8090
+  tomcat:
+    uri-encoding: UTF-8
+
+
+cos:
+  qcloud:
+    secret:
+      id: AKID890iPwwRPCoGWj9IrEQRHwPkcR9gxBAy
+      key: NyTBlAOQFvTq488xa8WlxALYgcFnAMMB
+    token:
+      expire:
+        millis: 300000
+    download:
+      url:
+        expire:
+          millis: 86400000
+    bucket: idopy-1253901570
+    region: ap-beijing
+    upload:
+      path: /upload/

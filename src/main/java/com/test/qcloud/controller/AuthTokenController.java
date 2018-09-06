@@ -1,0 +1,66 @@
+package com.test.qcloud.controller;
+
+import com.alibaba.fastjson.JSONObject;
+import com.qcloud.cos.COSClient;
+import com.qcloud.cos.ClientConfig;
+import com.qcloud.cos.auth.COSCredentials;
+import com.qcloud.cos.auth.COSSigner;
+import com.qcloud.cos.http.HttpMethodName;
+import com.qcloud.cos.region.Region;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.net.URL;
+import java.util.Date;
+
+/**
+ * 使用签名上传文件
+ */
+@RestController
+@RequestMapping("/qcloud/auth")
+public class AuthTokenController {
+
+    @Autowired
+    private COSCredentials cred;
+    @Value("${cos.qcloud.token.expire.millis}")
+    private Long expiredMills = 1000L;
+    @Value("${cos.qcloud.upload.path}")
+    private String uploadPath;
+
+    /**
+     * 生成签名
+     */
+    @RequestMapping("/token")
+    public String genToken(String fileSuffix){
+        COSSigner signer = new COSSigner();
+        Date expiredTime = new Date(System.currentTimeMillis() + expiredMills);
+        String key = "/upload/";
+        String sign = signer.buildAuthorizationStr(HttpMethodName.POST, key, cred, expiredTime);
+        JSONObject res = new JSONObject();
+        res.put("token", sign);
+        return res.toJSONString();
+    }
+
+    /**
+     * 生成带签名的上传URL
+     * @return
+     */
+    @RequestMapping("uploadUrl")
+    public String genPresignedUploadUrl() {
+        ClientConfig clientConfig = new ClientConfig(new Region("ap-beijing"));
+        // 3 生成cos客户端
+        COSClient cosclient = new COSClient(cred, clientConfig);
+        // bucket名需包含appid
+        String bucketName = "idopy-1253901570";
+
+        String key = "/upload/1.png";
+        Date expirationTime = new Date(System.currentTimeMillis() + 30 * 60 * 1000);
+        URL url = cosclient.generatePresignedUrl(bucketName, key, expirationTime, HttpMethodName.PUT);
+        JSONObject res = new JSONObject();
+        res.put("url", url);
+        return res.toJSONString();
+    }
+}
