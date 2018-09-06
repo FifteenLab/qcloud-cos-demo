@@ -1,4 +1,4 @@
-package com.test.qcloud.controller;
+package com.idopy.qcloud.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.qcloud.cos.COSClient;
@@ -7,7 +7,6 @@ import com.qcloud.cos.auth.COSCredentials;
 import com.qcloud.cos.auth.COSSigner;
 import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.region.Region;
-import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +28,8 @@ public class AuthTokenController {
     private Long expiredMills = 1000L;
     @Value("${cos.qcloud.upload.path}")
     private String uploadPath;
+    @Value("${cos.qcloud.host}")
+    private String host;
 
     /**
      * 生成签名
@@ -37,10 +38,10 @@ public class AuthTokenController {
     public String genToken(String fileSuffix){
         COSSigner signer = new COSSigner();
         Date expiredTime = new Date(System.currentTimeMillis() + expiredMills);
-        String key = "/upload/";
-        String sign = signer.buildAuthorizationStr(HttpMethodName.POST, key, cred, expiredTime);
+        String sign = signer.buildAuthorizationStr(HttpMethodName.POST, uploadPath, cred, expiredTime);
         JSONObject res = new JSONObject();
         res.put("token", sign);
+        res.put("postUrl", host + uploadPath);
         return res.toJSONString();
     }
 

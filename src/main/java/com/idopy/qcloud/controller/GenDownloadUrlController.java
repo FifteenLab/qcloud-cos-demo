@@ -1,4 +1,4 @@
-package com.test.qcloud.controller;
+package com.idopy.qcloud.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.qcloud.cos.COSClient;

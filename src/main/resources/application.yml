@@ -18,5 +18,6 @@ cos:
           millis: 86400000
     bucket: idopy-1253901570
     region: ap-beijing
+    host: https://idopy-1253901570.cos.ap-beijing.myqcloud.com
     upload:
       path: /upload/

@@ -28,14 +28,11 @@
 /*<![CDATA[*/
     (function () {
         // 请求用到的参数
-        var Bucket = 'idopy-1253901570';
-        var Region = 'ap-beijing';
-        var protocol = location.protocol === 'https:' ? 'https:' : 'http:';
-        var prefix = protocol + '//' + Bucket + '.cos.' + Region + '.myqcloud.com/upload/';
+        var prefix;
         var token;
         // 计算签名
         var getAuthorization = function (options, callback) {
-            if (!token) {
+            if (!token || !prefix) {
                 var url = '/qcloud/auth/token';
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', url, true);
@@ -46,6 +43,7 @@
                     } catch (e) {}
                     if (AuthData && AuthData.token) {
                         token = AuthData.token;
+                        prefix = AuthData.postUrl;
                         callback(null, {});
                     } else {
                         console.error(AuthData);
