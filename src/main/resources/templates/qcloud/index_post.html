@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
 <head>
-    <meta charset="UTF-8"/>
+    <meta charset="UTF-8" />
     <title>Ajax Post 上传</title>
     <style>
         h1, h2 {
@@ -22,7 +22,7 @@
 <input id="submitBtn" type="submit"/>
 
 <div id="msg"></div>
-
+<img src="https://idopy-1253901570.cos.ap-beijing.myqcloud.com/upload/b9b242fc1306e2760fcb61612a745184.jpg"/>
 <script src="/cos-js-sdk-v5.min.js"></script>
 <script th:inline="javascript">
 /*<![CDATA[*/
@@ -30,10 +30,11 @@
         // 请求用到的参数
         var prefix;
         var token;
+        var dir;
         // 计算签名
         var getAuthorization = function (options, callback) {
             if (!token || !prefix) {
-                var url = '/qcloud/auth/token';
+                var url = '/qcloud/auth/token?method=post';
                 var xhr = new XMLHttpRequest();
                 xhr.open('GET', url, true);
                 xhr.onload = function (e) {
@@ -44,6 +45,7 @@
                     if (AuthData && AuthData.token) {
                         token = AuthData.token;
                         prefix = AuthData.postUrl;
+                        dir = AuthData.dir
                         callback(null, {});
                     } else {
                         console.error(AuthData);
@@ -68,7 +70,8 @@
                     return;
                 }
                 var fd = new FormData();
-                var key = file.name;// 用于下载文件
+                // *** 开头不能存在"/"
+                var key = '/upload/' + file.name;// dir;// dir + file.name;// 用于下载文件
                 fd.append('key', key);
                 fd.append('Signature', token);
                 fd.append('Content-Type', '');
@@ -82,11 +85,11 @@
                         // var ETag = xhr.getResponseHeader('etag');
                         callback(null, {url: prefix + encodeURIComponent(key).replace(/%2F/g, '/'), ETag: ""});
                     } else {
-                        callback('文件 ' + Key + ' 上传失败，状态码：' + xhr.status);
+                        callback('文件 ' + key + ' 上传失败，状态码：' + xhr.status);
                     }
                 };
                 xhr.onerror = function () {
-                    callback('文件 ' + Key + ' 上传失败，请检查是否没配置 CORS 跨域规则');
+                    callback('文件 ' + key + ' 上传失败，请检查是否没配置 CORS 跨域规则');
                 };
                 xhr.send(fd);
             });

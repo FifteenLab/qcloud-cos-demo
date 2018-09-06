@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+<head>
+    <meta charset="UTF-8" />
+    <title>Ajax Post 上传</title>
+    <style>
+        h1, h2 {
+            font-weight: normal;
+        }
+
+        #msg {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Ajax Put 上传</h1>
+
+<input id="fileSelector" type="file"/>
+<input id="submitBtn" type="submit"/>
+
+<div id="msg"></div>
+<img src="https://idopy-1253901570.cos.ap-beijing.myqcloud.com/upload/abc"/>
+<script src="/cos-js-sdk-v5.min.js"></script>
+<script th:inline="javascript">
+/*<![CDATA[*/
+    (function () {
+        // 请求用到的参数
+        var prefix;
+        var token;
+        var dir;
+        // 计算签名
+        var getAuthorization = function (options, callback) {
+            if (!token || !prefix) {
+                var url = '/qcloud/auth/token?method=PUT';
+                var xhr = new XMLHttpRequest();
+                xhr.open('GET', url, true);
+                xhr.onload = function (e) {
+                    var AuthData;
+                    try {
+                        AuthData = JSON.parse(xhr.responseText)
+                    } catch (e) {}
+                    if (AuthData && AuthData.token) {
+                        callback(null, {
+                            Authorization:AuthData.token,
+                            Url:AuthData.postUrl
+                        });
+                    } else {
+                        console.error(AuthData);
+                        callback('获取签名出错');
+                    }
+                };
+                xhr.onerror = function (e) {
+                    callback('获取签名出错');
+                };
+                xhr.send();
+            } else {
+                callback(null, {});
+            }
+        };
+
+        // 上传文件
+        var uploadFile = function (file, callback) {
+            var Key = 'dir/' + file.name; // 这里指定上传目录和文件名
+            getAuthorization({Method: 'PUT', Key: Key}, function (err, info) {
+                if (err) {
+                    alert(err);
+                    return;
+                }
+                var auth = info.Authorization;
+                var XCosSecurityToken = info.XCosSecurityToken;
+                var url = info.Url;
+                var xhr = new XMLHttpRequest();
+                xhr.open('PUT', url, true);
+                xhr.setRequestHeader('Authorization', auth);
+                XCosSecurityToken && xhr.setRequestHeader('x-cos-security-token', XCosSecurityToken);
+                xhr.upload.onprogress = function (e) {
+                    console.log('上传进度 ' + (Math.round(e.loaded / e.total * 10000) / 100) + '%');
+                };
+                xhr.onload = function () {
+                    if (xhr.status === 200 || xhr.status === 206) {
+                        var ETag = xhr.getResponseHeader('etag');
+                        callback(null, {url: url, ETag: ETag});
+                    } else {
+                        callback('文件 ' + Key + ' 上传失败，状态码：' + xhr.status);
+                    }
+                };
+                xhr.onerror = function () {
+                    callback('文件 ' + Key + ' 上传失败，请检查是否没配置 CORS 跨域规则');
+                };
+                xhr.send(file);
+            });
+        };
+
+        // 监听表单提交
+        document.getElementById('submitBtn').onclick = function (e) {
+            var file = document.getElementById('fileSelector').files[0];
+            if (!file) {
+                document.getElementById('msg').innerText = '未选择上传文件';
+                return;
+            }
+            file && uploadFile(file, function (err, data) {
+                console.log(err || data);
+                document.getElementById('msg').innerText = err ? err : ('上传成功，ETag=' + data.ETag);
+            });
+        };
+    })();
+/*]]>*/
+</script>
+
+</body>
+</html>

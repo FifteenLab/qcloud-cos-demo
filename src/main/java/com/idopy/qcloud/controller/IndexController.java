@@ -13,7 +13,10 @@ public class IndexController {
 
 
     @RequestMapping(value = {"","/"})
-    public ModelAndView index() {
-        return new ModelAndView("qcloud/index");
+    public ModelAndView index(String method) {
+        if (method.equals("post")) {
+            return new ModelAndView("qcloud/index_post");
+        }
+        return new ModelAndView("qcloud/index_put");
     }
 }

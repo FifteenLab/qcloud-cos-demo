@@ -35,13 +35,18 @@ public class AuthTokenController {
      * 生成签名
      */
     @RequestMapping("/token")
-    public String genToken(String fileSuffix){
+    public String genToken(String method){
         COSSigner signer = new COSSigner();
         Date expiredTime = new Date(System.currentTimeMillis() + expiredMills);
-        String sign = signer.buildAuthorizationStr(HttpMethodName.POST, uploadPath, cred, expiredTime);
+        HttpMethodName httpMethodName = HttpMethodName.PUT;
+        if ("post".equalsIgnoreCase(method)) {
+            httpMethodName = HttpMethodName.POST;
+        }
+        String key = "/";
+        String sign = signer.buildAuthorizationStr(httpMethodName, key, cred, expiredTime);
         JSONObject res = new JSONObject();
         res.put("token", sign);
-        res.put("postUrl", host + uploadPath);
+        res.put("postUrl", host + key);
         return res.toJSONString();
     }
 

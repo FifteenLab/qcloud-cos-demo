@@ -38,6 +38,8 @@ public class UploadController {
     private String bucketName;
     @Value("${cos.qcloud.upload.path}")
     private String uploadPath;
+    @Value("${cos.qcloud.host}")
+    private String host;
     /**
      * 首页
      * @return
@@ -49,13 +51,13 @@ public class UploadController {
 
     @PostMapping(value = "/single")
     public ModelAndView singleFileUpload(@RequestParam("file") MultipartFile file, RedirectAttributes redirectAttributes) {
-        ModelAndView result = new ModelAndView("redirect:qcloud/upload/result");
+        ModelAndView result = new ModelAndView("redirect:result");
         if (file.isEmpty()) {
             redirectAttributes.addFlashAttribute("msg", "请选择文件");
             return result;
         }
         COSClient cosClient = new COSClient(cred, clientConfig);
-        String key = uploadPath + file.getName();
+        String key = uploadPath + file.getOriginalFilename();
         try {
             ObjectMetadata objectMetadata = new ObjectMetadata();
             // 从输入流上传必须制定content length, 否则http客户端可能会缓存所有数据，存在内存OOM的情况
@@ -70,6 +72,7 @@ public class UploadController {
             // putobjectResult会返回文件的etag
             String etag = putObjectResult.getETag();
             redirectAttributes.addFlashAttribute("msg", "上传成功");
+            redirectAttributes.addFlashAttribute("imgUrl", host + key);
         } catch (CosServiceException e) {
             e.printStackTrace();
         } catch (CosClientException e) {
@@ -87,6 +90,7 @@ public class UploadController {
      * 上传文件结果
      * @return
      */
+    @RequestMapping("result")
     public ModelAndView result() {
         return new ModelAndView("qcloud/uploadResult");
     }
