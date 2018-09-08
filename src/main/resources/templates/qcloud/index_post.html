@@ -71,7 +71,7 @@
                 }
                 var fd = new FormData();
                 // *** 开头不能存在"/"
-                var key = '/upload/' + file.name;// dir;// dir + file.name;// 用于下载文件
+                var key = 'upload/' + file.name;// dir;// dir + file.name;// 用于下载文件
                 fd.append('key', key);
                 fd.append('Signature', token);
                 fd.append('Content-Type', '');
